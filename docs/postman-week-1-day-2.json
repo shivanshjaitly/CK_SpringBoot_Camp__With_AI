@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "CodeKerdos EMS - Week 1 Day 2",
+    "description": "Employee Management System API + Groq AI endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Department",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Engineering\"\n}"
+        },
+        "url": "http://localhost:8080/api/departments"
+      }
+    },
+    {
+      "name": "List Departments",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/departments"
+      }
+    },
+    {
+      "name": "Create Employee",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Rahul Sharma\",\n  \"role\": \"Senior Engineer\",\n  \"team\": \"Backend\",\n  \"joinedDate\": \"2023-06-15\",\n  \"departmentId\": 1\n}"
+        },
+        "url": "http://localhost:8080/api/employees"
+      }
+    },
+    {
+      "name": "List Employees",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/employees"
+      }
+    },
+    {
+      "name": "AI Greet (Groq)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8080/api/ai/greet?name=Shivansh",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "ai", "greet"],
+          "query": [{ "key": "name", "value": "Shivansh" }]
+        }
+      }
+    },
+    {
+      "name": "AI Onboarding Checklist (PromptTemplate)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Priya Patel\",\n  \"role\": \"Junior Developer\",\n  \"department\": \"Engineering\",\n  \"team\": \"Frontend\",\n  \"joinedDate\": \"2025-01-10\"\n}"
+        },
+        "url": "http://localhost:8080/api/ai/onboarding-checklist"
+      }
+    }
+  ]
+}
