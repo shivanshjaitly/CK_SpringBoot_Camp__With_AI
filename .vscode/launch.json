@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Week 1 EMS — Run with Groq",
+      "request": "launch",
+      "mainClass": "in.codekerdos.ems.EmployeeManagementApplication",
+      "projectName": "employee-management",
+      "cwd": "${workspaceFolder}/week-01-employee-management",
+      "envFile": "${workspaceFolder}/week-01-employee-management/.env"
+    },
+    {
+      "type": "java",
+      "name": "Week 2 EMS — Run with Groq (H2)",
+      "request": "launch",
+      "mainClass": "in.codekerdos.ems.EmployeeManagementApplication",
+      "projectName": "week-02-employee-management",
+      "cwd": "${workspaceFolder}/week-02-employee-management",
+      "envFile": "${workspaceFolder}/week-02-employee-management/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "h2"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Week 2 EMS — Run with MySQL",
+      "request": "launch",
+      "mainClass": "in.codekerdos.ems.EmployeeManagementApplication",
+      "projectName": "week-02-employee-management",
+      "cwd": "${workspaceFolder}/week-02-employee-management",
+      "envFile": "${workspaceFolder}/week-02-employee-management/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "mysql"
+      }
+    }
+  ]
+}

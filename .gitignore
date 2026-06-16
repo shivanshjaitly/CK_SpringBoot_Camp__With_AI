@@ -13,7 +13,10 @@ release.properties
 .project
 .classpath
 .settings/
-.vscode/
+# .vscode/ is committed (launch.json for VS Code / Cursor)
+# Secrets stay local:
+week-01-employee-management/.env
+week-02-employee-management/.env
 
 # OS
 .DS_Store

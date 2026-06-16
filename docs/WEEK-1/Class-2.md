@@ -39,6 +39,75 @@
 
 ---
 
+## HOW TO RUN — VS Code / Cursor (do this BEFORE class)
+
+> **You use VS Code or Cursor** — not terminal `mvn` (Maven may not be in PATH).  
+> **Students:** same steps — Groq key in local `.env` file, never commit it.
+
+### One-time setup
+
+| Step | Action |
+|------|--------|
+| 1 | Open **VS Code / Cursor** → **File → Open Folder** → select `CK_SpringBoot_Camp__With_AI` (whole repo) |
+| 2 | Install extensions when prompted (or install **Extension Pack for Java** + **Spring Boot Extension Pack**) |
+| 3 | Wait for Maven import to finish (bottom-right progress bar) |
+| 4 | Copy env file: in terminal inside `week-01-employee-management` run: `cp .env.example .env` |
+| 5 | Open `week-01-employee-management/.env` → paste your Groq key after `GROQ_API_KEY=` |
+| 6 | Save `.env` — this file is **gitignored** (never pushed to GitHub) |
+
+### Every time you run the app
+
+| Step | Action |
+|------|--------|
+| 1 | **Stop** any old run (red square top toolbar) |
+| 2 | Press **F5** OR left sidebar **Run and Debug** (play icon) → select **"Week 1 EMS — Run with Groq"** → green **Run** |
+| 3 | Wait for console: `Tomcat started on port 8080` |
+| 4 | Test in Postman (see below) |
+
+**Alternative:** Open `EmployeeManagementApplication.java` → click **Run** above `main()` — but **F5 / Run and Debug** is safer (loads `.env` automatically).
+
+### Postman tests (after app is running)
+
+```http
+GET http://localhost:8080/api/ai/greet?name=Shivansh
+```
+
+```http
+POST http://localhost:8080/api/departments
+Content-Type: application/json
+
+{ "name": "Engineering" }
+```
+
+```http
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+
+{
+  "name": "Rahul Sharma",
+  "role": "Senior Engineer",
+  "team": "Backend",
+  "joinedDate": "2023-06-15",
+  "departmentId": 1
+}
+```
+
+### Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `401 Invalid API Key` | Check `week-01-employee-management/.env` has correct key; **restart** app with F5 |
+| `500` on `/api/ai/greet` | Same as above — Groq key not loaded; use **Run and Debug**, not old Run button |
+| `mvn: command not found` | **Ignore terminal mvn** — use VS Code F5 instead |
+| Run config missing | Open repo root folder (not subfolder only); check `.vscode/launch.json` exists |
+| Java project not found | Command Palette (`Cmd+Shift+P`) → **Java: Clean Java Language Server Workspace** → reload |
+
+### Tell students in class
+
+> "Create `.env` from `.env.example`, add your Groq key, run with F5. Never commit `.env`."
+
+---
+
 ## TOPIC 1 — Day 1 Recap (5 min)
 
 ### Quick fire questions (ask class)
@@ -94,7 +163,7 @@ public class EmployeeManagementApplication {
 
 ### DEMO
 
-Open `EmployeeManagementApplication.java` → run → show Tomcat starts on port 8080.
+**F5** → Run **Week 1 EMS — Run with Groq** → show Tomcat starts on port 8080.
 
 ### END THOUGHT
 
@@ -200,27 +269,48 @@ spring:
 
 ### Groq setup (do this LIVE with class — 5 min)
 
+**Step 1 — Get key**
+
+1. Go to [https://console.groq.com](https://console.groq.com)
+2. Sign up (free, no credit card)
+3. **API Keys → Create API Key** → copy (starts with `gsk_`)
+
+**Step 2 — VS Code / Cursor (recommended for class)**
+
+1. In project folder `week-01-employee-management`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Open `.env` → set:
+   ```
+   GROQ_API_KEY=gsk_your_key_here
+   ```
+3. Save — **never commit `.env`**
+
+**Step 3 — Run app**
+
+1. **F5** (or Run and Debug → **Week 1 EMS — Run with Groq**)
+2. Wait for `Tomcat started on port 8080`
+
+**Why not paste key in `application.yml`?**
+
+```yaml
+# ✅ CORRECT (in application.yml — committed to Git)
+api-key: ${GROQ_API_KEY}
+
+# ❌ WRONG
+api-key: ${gsk_abc123...}   # tries to find env var named gsk_abc...
+api-key: gsk_abc123...      # works locally but leaks if you push to GitHub
 ```
-Step 1: Go to https://console.groq.com
-Step 2: Sign up (Google/GitHub — free, no credit card)
-Step 3: Left menu → API Keys → Create API Key
-Step 4: Copy key (starts with gsk_...)
-Step 5: NEVER paste in chat / NEVER commit to GitHub
 
-Mac/Linux:
-  export GROQ_API_KEY=gsk_your_key_here
-
-Windows PowerShell:
-  $env:GROQ_API_KEY="gsk_your_key_here"
-
-IntelliJ: Run → Edit Configurations → Environment Variables → GROQ_API_KEY=gsk_...
-```
+**IntelliJ users (optional):** Run → Edit Configurations → Environment Variables → `GROQ_API_KEY=gsk_...`
 
 ### DEMO
 
-1. Set env var
-2. Start app
-3. Open H2 console: `http://localhost:8080/h2-console`
+1. Confirm `.env` file exists with key
+2. **F5** → start app
+3. Postman: `GET http://localhost:8080/api/ai/greet?name=Shivansh` → should return AI message (not 500)
+4. H2 console: `http://localhost:8080/h2-console`
    - JDBC URL: `jdbc:h2:mem:emsdb`
    - User: `sa`, Password: (empty)
 

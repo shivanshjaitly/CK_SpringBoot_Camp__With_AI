@@ -1,10 +1,14 @@
-# Week 2 — Not created yet
+# Week 2
 
-Will follow same pattern as Week 1:
+| Class | When | File | Code |
+|-------|------|------|------|
+| **Class 1** | Saturday | [Class-1.md](Class-1.md) | `week-02-employee-management` |
+| **Class 2** | Sunday | [Class-2.md](Class-2.md) | `week-02-employee-management` |
 
-```
-docs/WEEK-2/Class-1.md   ← Saturday
-docs/WEEK-2/Class-2.md   ← Sunday
-```
+Each file = full script (topics + architecture diagrams + code + demos). Teach Topic 1 → N in order.
 
-[← Back to Week 1](../WEEK-1/README.md)
+**Starting checkpoint:** Students finished Week 1 at `application.yml` only. Week 2 uses a **new folder** — same EMS project, clean segregation.
+
+**End of Week 2:** Project #1 (EMS) complete — MySQL, pagination, NL search, login page.
+
+[← Back to Week 1](../WEEK-1/README.md) · [← START-HERE](../../START-HERE.md)

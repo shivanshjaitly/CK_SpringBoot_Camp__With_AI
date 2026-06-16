@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>EMS Home — CodeKerdos</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="card wide">
+    <h1>Employee Management System</h1>
+    <p class="subtitle">Week 2 — Project #1</p>
+
+    <p>Logged in as: <strong sec:authentication="name">HR User</strong></p>
+
+    <h2>API Endpoints (use Postman with Basic Auth or browser session)</h2>
+    <ul class="api-list">
+        <li><code>GET /api/employees?page=0&amp;size=10</code> — paginated list</li>
+        <li><code>POST /api/employees</code> — create employee</li>
+        <li><code>GET /api/ai/greet?name=YourName</code> — AI greeting</li>
+        <li><code>POST /api/ai/search-employees</code> — natural language HR search</li>
+    </ul>
+
+    <form th:action="@{/logout}" method="post">
+        <button type="submit" class="secondary">Logout</button>
+    </form>
+</div>
+</body>
+</html>

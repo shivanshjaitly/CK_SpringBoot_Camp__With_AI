@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>EMS Login — CodeKerdos</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="card">
+    <h1>Employee Management</h1>
+    <p class="subtitle">HR Portal — CodeKerdos Bootcamp</p>
+
+    <div th:if="${param.error}" class="alert error">Invalid username or password.</div>
+    <div th:if="${param.logout}" class="alert success">You have been logged out.</div>
+
+    <form th:action="@{/login}" method="post">
+        <label for="username">Email</label>
+        <input id="username" name="username" type="email" placeholder="hr@codekerdos.in" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="hr123" required>
+
+        <button type="submit">Sign in</button>
+    </form>
+
+    <p class="hint">Class demo: hr@codekerdos.in / hr123</p>
+</div>
+</body>
+</html>
