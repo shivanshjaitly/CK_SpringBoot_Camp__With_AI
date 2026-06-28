@@ -1,6 +1,7 @@
 package in.codekerdos.ems.service;
 
 import in.codekerdos.ems.dto.CreateDepartmentRequest;
+import in.codekerdos.ems.exception.ResourceNotFoundException;
 import in.codekerdos.ems.dto.DepartmentResponse;
 import in.codekerdos.ems.entity.Department;
 import in.codekerdos.ems.repository.DepartmentRepository;
