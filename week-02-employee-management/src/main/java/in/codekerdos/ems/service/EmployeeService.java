@@ -1,6 +1,7 @@
 package in.codekerdos.ems.service;
 
 import in.codekerdos.ems.dto.CreateEmployeeRequest;
+import in.codekerdos.ems.exception.ResourceNotFoundException;
 import in.codekerdos.ems.dto.EmployeeResponse;
 import in.codekerdos.ems.dto.PagedEmployeeResponse;
 import in.codekerdos.ems.entity.Department;

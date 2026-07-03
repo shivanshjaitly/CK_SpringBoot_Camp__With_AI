@@ -1,6 +1,11 @@
 package in.codekerdos.ems.service;
 
-public class ResourceNotFoundException extends RuntimeException {
+/**
+ * Week 3 Exercise A — file pointer only.
+ * Real implementation: {@link in.codekerdos.ems.exception.ResourceNotFoundException}
+ */
+@Deprecated
+public class ResourceNotFoundException extends in.codekerdos.ems.exception.ResourceNotFoundException {
 
     public ResourceNotFoundException(String message) {
         super(message);

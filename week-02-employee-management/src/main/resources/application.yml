@@ -1,6 +1,10 @@
 server:
   port: 8080
 
+jwt:
+  secret: "codekerdos-ems-jwt-secret-key-min-32-chars!!"
+  expiry-ms: 3600000
+
 spring:
   application:
     name: employee-management
