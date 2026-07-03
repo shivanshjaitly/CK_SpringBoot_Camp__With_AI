@@ -615,8 +615,8 @@ Demo credentials on login page: `hr@codekerdos.in` / `hr123`
 ### SAY — Week 3 preview
 
 > "EMS = **Project #1 — done**. One of three portfolio projects.
-> Week 3 we start **Expense Management** in a **new folder** — new domain, same Spring + AI patterns.
-> Expense AI features coming — receipt help, smart categories. See you Saturday."
+> Week 3 = **Security lecture** — CSRF, filter chain, `SecurityConfig`. Same EMS codebase.
+> Week 4–5 = **Expense Approval** — Project #2 (JWT, workflow, AI). See you Saturday."
 
 ### END THOUGHT
 

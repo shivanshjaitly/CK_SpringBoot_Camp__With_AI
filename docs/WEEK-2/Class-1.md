@@ -148,7 +148,7 @@ week-02-employee-management  →  full EMS (today + Sunday)
 | Bootcamp project | AI feature | When |
 |------------------|------------|------|
 | **EMS (this project)** | Greet, onboarding checklist, **natural language employee search** | Week 1–2 |
-| Expense System | Receipt/category AI (TBD) | Week 3–4 |
+| Expense System | Categorize + fraud + manager summary | Week 4–5 |
 | Booking + RAG | Document Q&A with retrieval | Week 5 |
 
 ### EMS AI roadmap (this week)

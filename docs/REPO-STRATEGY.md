@@ -22,9 +22,9 @@ codekerdos-springboot-ai-bootcamp/
 │   └── ... WEEK-3 through WEEK-7
 ├── week-01-spring-core-demo/
 ├── week-01-employee-management/
-├── week-02-employee-management/    ← continues EMS in Week 2
-├── week-03-expense-approval/
-└── week-04-booking-service/
+├── week-02-employee-management/    ← Week 2–3 (EMS + security)
+├── week-04-expense-approval/       ← Week 4–5 (Expense — Project #2)
+└── week-06-booking-service/
 ```
 
 ### Why one repo?
@@ -76,7 +76,7 @@ Students:               fork once → pull every Saturday
 | Type | Pattern | Example |
 |------|---------|---------|
 | Week docs | `docs/WEEK-N/Class-M.md` | `docs/WEEK-2/Class-1.md` |
-| Code project | `week-0N-project-name/` | `week-03-expense-approval/` |
+| Code project | `week-0N-project-name/` | `week-04-expense-approval/` |
 | Shared resources | `docs/groq-setup.md` | stays in `docs/` root |
 
 ---

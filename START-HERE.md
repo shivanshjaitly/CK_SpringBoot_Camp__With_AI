@@ -8,62 +8,58 @@
 | **Week 1 · Sunday** | [`docs/WEEK-1/Class-2.md`](docs/WEEK-1/Class-2.md) | `week-01-employee-management` |
 | **Week 2 · Saturday** | [`docs/WEEK-2/Class-1.md`](docs/WEEK-2/Class-1.md) | `week-02-employee-management` |
 | **Week 2 · Sunday** | [`docs/WEEK-2/Class-2.md`](docs/WEEK-2/Class-2.md) | `week-02-employee-management` |
-| Week 3+ | `docs/WEEK-3/Class-1.md` (not created yet) | TBD |
+| **Week 3 · Saturday** | [`docs/WEEK-3/Class-1.md`](docs/WEEK-3/Class-1.md) | `week-02-employee-management` |
+| **Week 3 · Sunday** | [`docs/WEEK-3/Class-2.md`](docs/WEEK-3/Class-2.md) | `week-02-employee-management` |
+| **Week 4 · Saturday** | [`docs/WEEK-4/Class-1.md`](docs/WEEK-4/Class-1.md) | `week-04-expense-approval` |
+| **Week 4 · Sunday** | [`docs/WEEK-4/Class-2.md`](docs/WEEK-4/Class-2.md) | `week-04-expense-approval` |
+| **Week 5 · Saturday** | [`docs/WEEK-5/Class-1.md`](docs/WEEK-5/Class-1.md) | `week-04-expense-approval` |
+| **Week 5 · Sunday** | [`docs/WEEK-5/Class-2.md`](docs/WEEK-5/Class-2.md) | `week-04-expense-approval` |
+| Week 6+ | TBD | TBD |
 
 ---
 
 ## Repo layout (simple)
 
 ```
-docs/
-  WEEK-1/
-    Class-1.md    ← Week 1 Saturday script
-    Class-2.md    ← Week 1 Sunday script
-  WEEK-2/
-    Class-1.md    ← Week 2 Saturday script
-    Class-2.md    ← Week 2 Sunday script
+docs/WEEK-1/ … WEEK-5/     ← each has Class-1.md + Class-2.md
 
-week-01-spring-core-demo/         ← Week 1 Saturday code
-week-01-employee-management/      ← Week 1 Sunday checkpoint (application.yml)
-week-02-employee-management/      ← Week 2 full EMS — Project #1
+week-01-spring-core-demo/
+week-01-employee-management/
+week-02-employee-management/    ← Week 2–3 (EMS + security lecture)
+week-04-expense-approval/         ← Week 4–5 (Expense — Project #2)
 ```
-
-**No other doc files needed.** Architecture is inside each topic — not a separate file.
 
 ---
 
-## What's ready vs not ready
+## What's ready
 
 | Week | Status |
 |------|--------|
-| Week 1 | ✅ Ready (Class 1 + Class 2) |
-| Week 2 | ✅ Ready (Class 1 + Class 2) |
-| Week 3–7 | ❌ Not created yet |
+| Week 1–2 | ✅ EMS — Project #1 |
+| Week 3 | ✅ Security lecture + Q&A |
+| Week 4–5 | ✅ Expense Approval docs (Project #2) |
+| Week 6+ | ❌ Not created yet |
 
 ---
 
 ## Week topic names (quick reference)
 
-**Week 1 Sat:** Welcome → Why Spring → Maven → IoC → DI → @Autowired → @Configuration → Scopes
+**Week 3 Sat:** CSRF · filter chain · SecurityConfig · secrets  
+**Week 3 Sun:** Open Q&A  
 
-**Week 1 Sun:** Spring Boot → application.yml → JPA → CRUD → Spring AI → ChatClient → PromptTemplate
+**Week 4 Sat:** Expense domain · enums · entities · ExpenseService  
+**Week 4 Sun:** JWT · BCrypt · login · employee submit  
 
-**Week 2 Sat:** Recap → AI crisp → Entities → CRUD → ChatClient → PromptTemplate → Security (Basic)
-
-**Week 2 Sun:** MySQL → Pagination → NL HR Search → Form login (Thymeleaf) → Project #1 complete
+**Week 5 Sat:** `@PreAuthorize` · approve/reject · admin · summary  
+**Week 5 Sun:** AI categorization · fraud · `@Async` · Project #2 complete  
 
 ---
 
-## Run Week 2 project (VS Code / Cursor)
+## Run projects
 
-1. `cp week-02-employee-management/.env.example week-02-employee-management/.env`
-2. Paste Groq key in `.env` → save
-3. **F5** → **Week 2 EMS — Run with Groq (H2)** (Saturday)
-4. **F5** → **Week 2 EMS — Run with MySQL** (Sunday — MySQL must be running)
-5. Postman Basic Auth: `hr@codekerdos.in` / `hr123`
-6. Browser login: `http://localhost:8080/login`
+**Week 2–3:** [`docs/WEEK-2/Class-1.md`](docs/WEEK-2/Class-1.md) — EMS + Basic Auth  
 
-Full steps: [`docs/WEEK-2/Class-1.md`](docs/WEEK-2/Class-1.md) → **HOW TO RUN**
+**Week 4–5:** [`docs/WEEK-4/Class-1.md`](docs/WEEK-4/Class-1.md) — Expense + JWT  
 
 ---
 
