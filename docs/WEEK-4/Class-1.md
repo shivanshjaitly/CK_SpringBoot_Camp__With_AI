@@ -517,7 +517,17 @@ public enum ExpenseCategory {
 }
 ```
 
-> Say: *"Category starts null — AI assigns it on Sunday. OTHER = fallback."*
+> **CODE WALKTHROUGH — explain as you type:**
+>
+> | Enum | Values | Say aloud |
+> |------|--------|-----------|
+> | `Role` | EMPLOYEE, MANAGER, ADMIN | "These three roles control what every user can do in the system. EMPLOYEE submits, MANAGER approves, ADMIN watches everything." |
+> | `ExpenseStatus` | PENDING → APPROVED / REJECTED | "An expense can only be in one of these three states. It always starts at PENDING — we enforce that in the service layer, not here." |
+> | `ExpenseCategory` | TRAVEL, FOOD, SOFTWARE, EQUIPMENT, OTHER | "We define valid categories in code, not as free-text in the DB. AI will pick one from this list on Sunday. OTHER is the fallback." |
+>
+> **Why enum, not a String field?**  
+> If you used `String category`, someone could set `"travel"` (typo) and your DB would have garbage.  
+> With an enum, the compiler rejects any invalid value at compile time.
 
 ### DRAW
 
@@ -571,9 +581,33 @@ public class AppUser {
     @Column(nullable = false)
     private Role role;
 
-    // getters and setters for all fields
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 }
 ```
+
+> **CODE WALKTHROUGH — explain line by line as you type:**
+>
+> | Line | What it does | Say aloud |
+> |------|--------------|-----------|
+> | `@Entity` | Tells JPA "make a DB table from this class" | "This annotation is the bridge between Java and the database" |
+> | `@Table(name = "users")` | Names the table `users` instead of `app_user` | "We control the table name — `users` reads better in SQL" |
+> | `@Id` + `@GeneratedValue` | Auto-increment primary key — DB assigns 1, 2, 3… | "We never set the ID ourselves — the DB handles that" |
+> | `@Column(unique = true)` on email | Database-level uniqueness constraint | "Two users cannot share an email — DB enforces this, not just Java code" |
+> | `@Enumerated(EnumType.STRING)` | Stores `"EMPLOYEE"` in DB, not `0` | "STRING is readable in H2 console — always prefer it over ORDINAL" |
+> | getters / setters | Spring and JPA need them to read/write fields | "Private fields + public getters/setters = encapsulation" |
 
 **FILE 2 — `entity/Expense.java`**
 
@@ -623,18 +657,66 @@ public class Expense {
 
     private String rejectionReason;
 
-    // AI fields (populated Sunday)
+    // AI fields (populated Week 5 Sunday)
     private String aiFraudFlags;
     private Instant aiProcessedAt;
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
-    // getters and setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    public LocalDate getExpenseDate() { return expenseDate; }
+    public void setExpenseDate(LocalDate expenseDate) { this.expenseDate = expenseDate; }
+
+    public ExpenseStatus getStatus() { return status; }
+    public void setStatus(ExpenseStatus status) { this.status = status; }
+
+    public ExpenseCategory getCategory() { return category; }
+    public void setCategory(ExpenseCategory category) { this.category = category; }
+
+    public AppUser getSubmittedBy() { return submittedBy; }
+    public void setSubmittedBy(AppUser submittedBy) { this.submittedBy = submittedBy; }
+
+    public AppUser getReviewedBy() { return reviewedBy; }
+    public void setReviewedBy(AppUser reviewedBy) { this.reviewedBy = reviewedBy; }
+
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+
+    public String getAiFraudFlags() { return aiFraudFlags; }
+    public void setAiFraudFlags(String aiFraudFlags) { this.aiFraudFlags = aiFraudFlags; }
+
+    public Instant getAiProcessedAt() { return aiProcessedAt; }
+    public void setAiProcessedAt(Instant aiProcessedAt) { this.aiProcessedAt = aiProcessedAt; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
 ```
 
-> Say: *"`BigDecimal` for money — never `double`. `aiFraudFlags` stores JSON string until Sunday."*
+> **CODE WALKTHROUGH — explain line by line as you type:**
+>
+> | Line | What it does | Say aloud |
+> |------|--------------|-----------|
+> | `BigDecimal amount` | Exact decimal math — no rounding errors | "Never use `double` for money. `double` gives you 8499.999... — BigDecimal gives you 8500.00 exactly" |
+> | `LocalDate expenseDate` | Date only, no time zone | "An expense happened on a day, not at a second — `LocalDate` is the right type" |
+> | `status = ExpenseStatus.PENDING` | Default value in Java, before DB even touches it | "Every new expense is born PENDING — we never let a caller set the status directly" |
+> | `category` (no `nullable = false`) | Nullable — AI fills this on Sunday | "We leave it null today. Week 5 AI will look at the title and set TRAVEL / FOOD / etc." |
+> | `@ManyToOne` submittedBy | Foreign key to the user who filed it | "One employee can submit many expenses — many expenses, one user" |
+> | `@ManyToOne` reviewedBy | Nullable — only filled when manager acts | "Until a manager approves or rejects, this stays null" |
+> | `aiFraudFlags` | String — will hold JSON from Groq | "Placeholder for Week 5. AI will write something like `{\"duplicate\": true}` here" |
+> | `createdAt = Instant.now()` | Timestamp auto-set in Java at object creation | "No need for `@CreatedDate` — the default value handles it" |
 
 ### DRAW
 
@@ -704,9 +786,19 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 }
 ```
 
-### END THOUGHT
+> **CODE WALKTHROUGH — explain method naming as you type:**
+>
+> | Method | SQL it generates | Say aloud |
+> |--------|-----------------|-----------|
+> | `findByEmail(String email)` | `SELECT * FROM users WHERE email = ?` | "Spring reads the method name and writes the SQL for you. Capital B in `By` separates field name." |
+> | `existsByEmail(String email)` | `SELECT COUNT(*) > 0 FROM users WHERE email = ?` | "Used in DataLoader to skip seeding if users already exist" |
+> | `findBySubmittedByOrderByCreatedAtDesc(AppUser user)` | `SELECT * FROM expenses WHERE submitted_by_id = ? ORDER BY created_at DESC` | "Long method name — Spring parses every word. `OrderBy` + `Desc` = newest first." |
+> | `findByStatusOrderByCreatedAtAsc(ExpenseStatus status)` | `SELECT * FROM expenses WHERE status = ? ORDER BY created_at ASC` | "Manager uses this to see all PENDING expenses, oldest first — fairness." |
+> | `findByExpenseDateBetween(LocalDate from, LocalDate to)` | `SELECT * FROM expenses WHERE expense_date BETWEEN ? AND ?` | "Admin date-range report — no SQL written, just method naming convention." |
 
 > "Zero SQL for basics. Topic 7 — DTOs."
+
+### END THOUGHT
 
 ---
 
@@ -809,9 +901,29 @@ public record ExpenseResponse(
 }
 ```
 
-### END THOUGHT
+> **CODE WALKTHROUGH — key teaching points:**
+>
+> **Why `record` instead of a normal class?**  
+> A `record` auto-generates a constructor, getters, `equals`, `hashCode`, and `toString`.  
+> For immutable data-transfer objects this saves 30+ lines. Say: *"We never modify a DTO after creating it — `record` is perfect."*
+>
+> | DTO | What it carries | Say aloud |
+> |-----|----------------|-----------|
+> | `LoginRequest` | Email + password coming IN | "`@Email` validates format before it even reaches your service — Spring fires a 400 automatically if it fails" |
+> | `AuthResponse` | Token + metadata going OUT | "The client stores this token and sends it back on every future request" |
+> | `SubmitExpenseRequest` | New expense data coming IN | "`@DecimalMin(\"0.01\")` means amount zero or negative is rejected before service runs" |
+> | `ExpenseResponse` | Expense data going OUT | "We only send email strings, never the full AppUser object — hides password hash from JSON" |
+>
+> **The `from()` static factory:**  
+> ```java
+> expense.getReviewedBy() != null ? expense.getReviewedBy().getEmail() : null
+> ```  
+> The manager has not acted yet → `reviewedBy` is null → we send `null` in JSON.  
+> Calling `.getEmail()` on null would throw a `NullPointerException` — the ternary guard is required.
 
 > "API contract is clear. Topic 8 — business logic."
+
+### END THOUGHT
 
 ---
 
@@ -893,9 +1005,44 @@ public class ExpenseService {
 }
 ```
 
-### END THOUGHT
+> **CODE WALKTHROUGH — explain each decision as you type:**
+>
+> **`ResourceNotFoundException`** — why a custom exception?  
+> When a user or expense is not found, we throw this instead of returning null.  
+> The `GlobalExceptionHandler` (Sunday) catches it and returns `404` JSON automatically.  
+> Say: *"Never return null from a service. Throw a named exception — callers know exactly what went wrong."*
+>
+> **Constructor injection** (not `@Autowired` on fields):  
+> ```java
+> public ExpenseService(ExpenseRepository expenseRepository, AppUserRepository appUserRepository) { ... }
+> ```  
+> Say: *"Spring Boot 3 recommends constructor injection. Dependencies are visible, final, and testable."*
+>
+> **`submit()` method — walk through each line:**
+>
+> | Line | Why |
+> |------|-----|
+> | `findByEmail(userEmail).orElseThrow(...)` | We look up the real user from the DB — we never trust a raw String ID from the caller |
+> | `expense.setStatus(ExpenseStatus.PENDING)` | We force PENDING here — caller cannot pass a different status |
+> | `expense.setSubmittedBy(user)` | Links this expense to the authenticated user via FK in DB |
+> | `ExpenseResponse.from(expenseRepository.save(...))` | Save returns the saved entity with generated ID; we immediately convert to DTO |
+>
+> **`@Transactional` vs `@Transactional(readOnly = true)`**  
+> `submit()` writes → use `@Transactional` (opens a read-write transaction).  
+> `findMine()` only reads → use `readOnly = true` (DB can optimize, no dirty-check overhead).  
+> Say: *"readOnly is a performance hint — always use it on read-only methods."*
+>
+> **`findMine()` — why not just `findAll()`?**  
+> ```java
+> expenseRepository.findBySubmittedByOrderByCreatedAtDesc(user)
+> ```  
+> An employee must only see their own expenses.  
+> `findAll()` would return everyone's data — a security leak.  
+> We filter at the repository level so the DB does less work too.
 
 > "Domain + submit logic ready — no security yet (Sunday). Topic 9 — wrap."
+
+### END THOUGHT
 
 ---
 
