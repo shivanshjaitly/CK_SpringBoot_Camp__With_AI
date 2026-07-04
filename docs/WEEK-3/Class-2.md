@@ -49,6 +49,313 @@
 
 ---
 
+# FULL REQUEST FLOW — From `localhost:8080` to JWT (EMS Codebase)
+
+> Use this section to walk students through **exactly** what happens from the moment they open the browser or fire a Postman request.  
+> There are **two separate login paths** in this app. This explains both — and where JWT enters the picture.
+
+---
+
+## THE BIG PICTURE — Two Paths, One App
+
+```
+                    ┌─────────────────────────────────────────────┐
+                    │           http://localhost:8080              │
+                    └───────────────────┬─────────────────────────┘
+                                        │
+                          Spring Security Filter Chain
+                                        │
+               ┌────────────────────────┴────────────────────────┐
+               │                                                   │
+        BROWSER PATH                                       API PATH (Postman)
+        GET /  or  /login                                  POST /api/auth/login
+        (Thymeleaf + Session)                              (JSON + JWT Token)
+               │                                                   │
+        Session Cookie                                       Bearer Token
+        ← stays in browser                                   ← you copy-paste it
+```
+
+> JWT is **only for the API path**. The browser uses a traditional session cookie.
+
+---
+
+## PATH 1 — Browser opens `localhost:8080`
+
+### Step 1 — You type `http://localhost:8080` in browser
+
+```
+Browser: GET /
+└─► Spring Security checks: is this user authenticated?
+    └─► No session cookie found → NOT authenticated
+    └─► SecurityConfig: anyRequest().authenticated()    [SecurityConfig.java : line 40]
+    └─► Redirect 302 → /login
+```
+
+### Step 2 — Login page loads
+
+```
+Browser: GET /login
+└─► SecurityConfig: .requestMatchers("/login").permitAll()  ← public, no auth needed
+└─► PageController.login()                             [PageController.java : line 14]
+    └─► return "login"
+    └─► Thymeleaf renders templates/login.html         [login.html]
+        └─► shows form: email + password fields
+            action="/login"  method="post"
+```
+
+### Step 3 — You fill the form and click Sign In
+
+```
+Browser: POST /login
+Body (form-encoded): username=hr@codekerdos.in&password=hr123
+└─► Spring Security's built-in UsernamePasswordAuthenticationFilter intercepts this
+    (NOT our AuthController — this is Spring's own filter)
+    └─► calls AuthenticationManager.authenticate(username, password)
+    └─► AuthenticationManager → UserDetailsService.loadUserByUsername()
+                                                       [SecurityConfig.java : line 72]
+        └─► finds user "hr@codekerdos.in" in InMemoryUserDetailsManager
+        └─► BCryptPasswordEncoder.matches("hr123", storedHash)
+                                                       [SecurityConfig.java : line 62]
+            └─► ✅ match → creates authenticated session
+            └─► ❌ mismatch → redirect to /login?error
+```
+
+### Step 4 — Successful login → home page
+
+```
+└─► SecurityConfig: .defaultSuccessUrl("/", true)      [SecurityConfig.java : line 46]
+└─► Redirect 302 → /
+└─► PageController.home()                              [PageController.java : line 9]
+    └─► return "home"
+    └─► Thymeleaf renders templates/home.html
+
+Browser now holds a SESSION COOKIE (JSESSIONID)
+Every future browser request carries this cookie automatically.
+JWT is NOT used here at all.
+```
+
+---
+
+## PATH 2 — Postman / API call (where JWT lives)
+
+### Step 1 — Login via API to get a token
+
+```
+Postman: POST http://localhost:8080/api/auth/login
+Headers: Content-Type: application/json
+Body:   { "username": "hr@codekerdos.in", "password": "hr123" }
+
+└─► SecurityConfig: /api/auth/** → permitAll()         [SecurityConfig.java : line 38]
+    (no auth required to reach the login endpoint)
+└─► AuthController.login()                             [AuthController.java : line 32]
+    └─► authenticationManager.authenticate(
+            UsernamePasswordAuthenticationToken(username, password)
+        )
+    └─► Same BCrypt check as PATH 1 ↑
+    └─► ✅ match → authentication.getName() = "hr@codekerdos.in"
+    └─► JwtService.generateToken("hr@codekerdos.in")   [JwtService.java : line 26]
+        └─► Jwts.builder()
+                .subject("hr@codekerdos.in")
+                .issuedAt(now)
+                .expiration(now + 3,600,000 ms)        ← 1 hour, from application.yml
+                .signWith(HMAC-SHA key)                ← key built from jwt.secret
+                .compact()
+        └─► returns "eyJhbGci..."
+
+Response: { "token": "eyJhbGci..." }   ← copy this
+```
+
+### Step 2 — Use the token on every API call
+
+```
+Postman: GET http://localhost:8080/api/employees
+Headers: Authorization: Bearer eyJhbGci...
+
+└─► Spring Security Filter Chain runs in order:
+    [1] JwtAuthFilter.doFilterInternal()               [JwtAuthFilter.java : line 27]
+        └─► reads header "Authorization"
+        └─► header starts with "Bearer " → extract token (substring after index 7)
+        └─► JwtService.extractUsername(token)          [JwtService.java : line 35]
+            └─► Jwts.parser()
+                    .verifyWith(key)       ← checks HMAC signature
+                    .build()
+                    .parseSignedClaims()   ← also auto-checks expiry
+                    .getPayload()
+                    .getSubject()          ← "hr@codekerdos.in"
+        └─► userDetailsService.loadUserByUsername("hr@codekerdos.in")
+        └─► UsernamePasswordAuthenticationToken(user, null, [ROLE_HR])
+        └─► SecurityContextHolder.getContext().setAuthentication(auth)
+            ↑ request is now "logged in" for this thread only
+
+    [2] chain.doFilter() → request continues
+        └─► SecurityConfig: /api/** → authenticated()  ← ✅ context is set
+        └─► EmployeeController handles the request
+        └─► Response returned
+
+If token missing / bad / expired:
+    └─► Exception caught silently (line 41 JwtAuthFilter)
+    └─► SecurityContext stays empty
+    └─► SecurityConfig: /api/** → authenticated() → ❌ → 401 Unauthorized
+```
+
+---
+
+## SIDE BY SIDE — Both paths compared
+
+| | Browser Path | API / Postman Path |
+|---|---|---|
+| Login URL | `POST /login` | `POST /api/auth/login` |
+| Who handles login | Spring's built-in filter | Our `AuthController` |
+| Credential format | HTML form (form-encoded) | JSON body |
+| Proof of identity after login | Session cookie (JSESSIONID) | JWT Bearer token |
+| Where stored | Browser auto-manages cookie | You copy-paste in Postman header |
+| Expires | Server session timeout | 1 hour (`jwt.expiry-ms`) |
+| JWT involved? | ❌ No | ✅ Yes |
+
+---
+
+# JWT FLOW — Password → Token → Protected API (EMS Codebase)
+
+> Use this section when a student asks *"where does the password go?"* or *"how does JWT actually work in our code?"*  
+> Every step maps to a real file in `week-02-employee-management`.
+
+---
+
+## PART A — Login (Generating the Token)
+
+```
+POST /api/auth/login
+Body: { "username": "hr@codekerdos.in", "password": "hr123" }
+```
+
+### Step-by-step
+
+```
+1. Request arrives
+   └─► AuthController.login()                         [AuthController.java : line 32]
+       └─► authenticationManager.authenticate(
+               UsernamePasswordAuthenticationToken(username, password)
+           )
+
+2. AuthenticationManager delegates to UserDetailsService
+   └─► SecurityConfig.userDetailsService()            [SecurityConfig.java : line 72]
+       └─► InMemoryUserDetailsManager holds:
+               username = "hr@codekerdos.in"
+               password = BCrypt("hr123")             ← stored as hash, never plain
+
+3. Password check
+   └─► BCryptPasswordEncoder.matches(
+           rawPassword  = "hr123"      ← what you typed
+           storedHash   = "$2a$..."    ← what was stored
+       )                                              [SecurityConfig.java : line 62]
+       └─► ✅ match → Authentication object returned
+       └─► ❌ no match → AuthenticationException → 401
+
+4. Token creation
+   └─► JwtService.generateToken(username)             [JwtService.java : line 26]
+       └─► Jwts.builder()
+               .subject("hr@codekerdos.in")
+               .issuedAt(now)
+               .expiration(now + 3 600 000 ms = 1 hour)
+               .signWith(HMAC-SHA key from jwt.secret)
+               .compact()
+       └─► returns a signed JWT string
+
+5. Response
+   └─► { "token": "eyJhbGci..." }
+```
+
+---
+
+## PART B — Using the Token (Every Subsequent Request)
+
+```
+GET /api/employees
+Header: Authorization: Bearer eyJhbGci...
+```
+
+### Step-by-step
+
+```
+1. Request enters Spring's filter chain
+   └─► JwtAuthFilter.doFilterInternal()               [JwtAuthFilter.java : line 27]
+       └─► reads header: "Authorization: Bearer <token>"
+       └─► strips "Bearer " prefix → raw token string
+
+2. Token verification
+   └─► JwtService.extractUsername(token)              [JwtService.java : line 35]
+       └─► Jwts.parser()
+               .verifyWith(key)          ← checks HMAC signature
+               .build()
+               .parseSignedClaims(token) ← also checks expiry automatically
+               .getPayload()
+               .getSubject()             ← returns "hr@codekerdos.in"
+       └─► ❌ bad signature or expired → exception caught silently (line 41)
+                                        → SecurityContext stays empty → 401
+
+3. Load UserDetails
+   └─► userDetailsService.loadUserByUsername("hr@codekerdos.in")
+       └─► returns UserDetails with roles ["ROLE_HR"]
+
+4. Set authentication in context
+   └─► UsernamePasswordAuthenticationToken(user, null, authorities)
+   └─► SecurityContextHolder.getContext().setAuthentication(auth)
+       └─► request is now "logged in" for this thread
+
+5. Filter chain continues
+   └─► chain.doFilter(request, response)
+   └─► SecurityConfig rule:  /api/** → .authenticated()   → ✅ allowed
+                                                           [SecurityConfig.java : line 39]
+   └─► Controller runs, response returned
+```
+
+---
+
+## PART C — What Protects What (SecurityConfig)
+
+```java
+// SecurityConfig.java — lines 37–42
+.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/api/auth/**", "/login", "/css/**", "/h2-console/**").permitAll()
+    .requestMatchers("/api/**").authenticated()   // ← JWT required here
+    .anyRequest().authenticated()
+)
+.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+```
+
+| URL pattern | Auth needed? | Who handles it |
+|-------------|-------------|----------------|
+| `POST /api/auth/login` | ❌ No | `AuthController` — issues token |
+| `GET /api/employees` | ✅ Yes — JWT | `JwtAuthFilter` → `EmployeeController` |
+| `POST /api/employees` | ✅ Yes — JWT | `JwtAuthFilter` → `EmployeeController` |
+| `/h2-console/**` | ❌ No (dev only) | Direct |
+
+---
+
+## PART D — Key Classes at a Glance
+
+| Class | File | Single job |
+|-------|------|-----------|
+| `JwtService` | `config/JwtService.java` | **Create** and **verify** tokens using `jwt.secret` |
+| `JwtAuthFilter` | `config/JwtAuthFilter.java` | **Intercept** every request, validate token, set context |
+| `AuthController` | `controller/AuthController.java` | **Login endpoint** — takes username+password, returns token |
+| `SecurityConfig` | `config/SecurityConfig.java` | **Wires everything** — rules, filter order, BCrypt, users |
+
+---
+
+## PART E — One-liner summaries for interview
+
+| Question | Answer |
+|----------|--------|
+| Where is the password checked? | `AuthenticationManager` → `BCryptPasswordEncoder.matches()` in `SecurityConfig` |
+| Where is the token created? | `JwtService.generateToken()` — called from `AuthController` |
+| Where is the token validated on every request? | `JwtAuthFilter.doFilterInternal()` — runs before every `/api/**` call |
+| What happens if token is expired? | Exception silently caught, `SecurityContext` not set → Spring returns 401 |
+| Why is `/api/auth/login` public? | `permitAll()` in `SecurityConfig` — you need to reach login without a token |
+| What hashing algorithm? | BCrypt — one-way, salted — never reversible |
+
+---
+
 # BLOCK 2 — Open Q&A (50 min)
 
 ### SAY — ground rules
