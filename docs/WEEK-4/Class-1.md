@@ -726,6 +726,72 @@ employee@...         Flight to Mumbai ₹8500 PENDING
 manager@...          (reviewedBy when approved/rejected)
 ```
 
+### JPA RELATIONSHIPS — deep dive (teach this after drawing)
+
+#### The two relationships in Expense.java
+
+```java
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "submitted_by_id", nullable = false)
+private AppUser submittedBy;
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "reviewed_by_id")
+private AppUser reviewedBy;
+```
+
+| Concept | Explanation | Say aloud |
+|---------|-------------|-----------|
+| `@ManyToOne` | Many expenses can belong to one user | "Read from right-to-left: one user HAS many expenses. From Expense's side it's Many-To-One." |
+| `@JoinColumn(name = "submitted_by_id")` | Name of the FK column in the `expenses` table | "Without this, Hibernate picks an ugly name. Always name it explicitly." |
+| `nullable = false` on submittedBy | Every expense must have a submitter — DB constraint | "You cannot insert an expense with no owner — the DB rejects it." |
+| No `nullable = false` on reviewedBy | Manager hasn't acted yet | "This FK starts null and gets set when approve/reject is called." |
+| `FetchType.LAZY` | Don't load the AppUser row until `.getSubmittedBy()` is called | "If you fetch 100 expenses and never touch `submittedBy`, no extra DB queries. Default for `@ManyToOne` in JPA 2+ is actually EAGER — always override with LAZY." |
+
+#### FetchType — LAZY vs EAGER
+
+```
+FetchType.EAGER (avoid)             FetchType.LAZY (use this)
+─────────────────────               ──────────────────────────
+SELECT * FROM expenses              SELECT * FROM expenses
+SELECT * FROM users WHERE id=1  ←   ← only runs if you call
+SELECT * FROM users WHERE id=2       expense.getSubmittedBy()
+SELECT * FROM users WHERE id=3
+... (N+1 queries!)
+```
+
+**N+1 Problem** — this is a common interview question:  
+> "If you fetch N expenses and each one EAGERly loads its user, you run 1 + N queries total."  
+> LAZY loading prevents this — one query, load the rest on demand.
+
+#### Why no `@OneToMany` on AppUser?
+
+You *could* add this to `AppUser`:
+```java
+// optional — we deliberately skip it in this project
+@OneToMany(mappedBy = "submittedBy")
+private List<Expense> expenses;
+```
+
+We skip it because:
+- We don't need to navigate from User → Expenses in code (we query through `ExpenseRepository` instead)
+- Adding `@OneToMany` without `FetchType.LAZY` would load ALL expenses every time you load a user
+- **Rule:** Only add the `@OneToMany` side if you need to traverse that direction in your code
+
+#### `@JoinColumn` explained
+
+```
+expenses table (DB)
+┌────┬────────┬──────────────────┬─────────────────┐
+│ id │ title  │ submitted_by_id  │ reviewed_by_id  │
+├────┼────────┼──────────────────┼─────────────────┤
+│  1 │ Flight │       3          │      NULL       │  ← manager not acted
+│  2 │ Hotel  │       3          │       5         │  ← manager (id=5) approved
+└────┴────────┴──────────────────┴─────────────────┘
+```
+`submitted_by_id` IS the FK column → points to `users.id`.  
+`@JoinColumn(name = "submitted_by_id")` just tells Hibernate the column name.
+
 ### RUN
 
 Restart app → console shows `create table users...` and `create table expenses...`
@@ -1043,6 +1109,93 @@ public class ExpenseService {
 > "Domain + submit logic ready — no security yet (Sunday). Topic 9 — wrap."
 
 ### END THOUGHT
+
+---
+
+# TOPIC 8B — `@Transactional` Deep Dive
+
+> *Teach this right after ExpenseService. 8 minutes. High interview value.*
+
+### SAY
+
+> "Every database operation needs a transaction. `@Transactional` is Spring's way of saying:
+> 'start a transaction before this method, commit when it succeeds, roll back if it throws'."
+
+### DRAW — what a transaction is
+
+```
+@Transactional
+submit() {
+    ┌─── BEGIN TRANSACTION ──────────────────────────┐
+    │  1. findByEmail → SELECT                        │
+    │  2. new Expense()                               │
+    │  3. expenseRepository.save → INSERT             │
+    │                                                 │
+    │  ✅ No exception? → COMMIT (data persisted)     │
+    │  ❌ Exception?    → ROLLBACK (nothing saved)    │
+    └─────────────────────────────────────────────────┘
+}
+```
+
+### The four rules — say each, then move on
+
+**Rule 1 — Write methods get `@Transactional`**
+```java
+@Transactional                // INSERT / UPDATE / DELETE
+public ExpenseResponse submit(...) { ... }
+```
+
+**Rule 2 — Read methods get `@Transactional(readOnly = true)`**
+```java
+@Transactional(readOnly = true)   // SELECT only
+public List<ExpenseResponse> findMine(...) { ... }
+```
+
+| `readOnly = true` benefit | Explanation |
+|--------------------------|-------------|
+| Database optimization | Some DBs (MySQL) skip dirty-check and flush on read-only |
+| Hibernate optimization | Skips snapshot comparison for change detection |
+| Routing support | DB connection pools can route to a read replica |
+
+**Rule 3 — Rollback on unchecked exceptions**
+
+```java
+@Transactional
+public ExpenseResponse submit(...) {
+    AppUser user = appUserRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    // ↑ throws RuntimeException → Spring catches it → ROLLBACK → no partial data in DB
+    ...
+}
+```
+
+> "If the user lookup fails after we already did some work, everything is rolled back automatically.
+> No need to manually undo anything."
+
+**Rule 4 — `@Transactional` does NOT work if you call the method from within the same class**
+
+```java
+// WRONG — self-invocation bypasses the proxy
+public void doSomething() {
+    this.submit(request, email);   // @Transactional ignored!
+}
+
+// CORRECT — inject the service and call from outside
+expenseService.submit(request, email);  // proxy intercepts → transaction starts
+```
+
+> Say: *"Spring wraps your `@Service` bean in a proxy. The proxy starts the transaction before calling your method.
+> If you call the method directly from inside the same class, you bypass the proxy — transaction doesn't start."*
+
+### Interview Q&A
+
+| Question | Answer |
+|----------|--------|
+| What does `@Transactional` do? | Wraps method in a DB transaction — commit on success, rollback on exception |
+| When is rollback triggered? | Any unchecked exception (`RuntimeException`) by default |
+| Why `readOnly = true`? | Tells DB/Hibernate this is a SELECT — enables optimizations |
+| What is self-invocation problem? | Calling `@Transactional` method from same class bypasses Spring proxy |
+| Where should `@Transactional` live? | Service layer — not controller, not repository |
 
 ---
 
