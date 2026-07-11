@@ -26,15 +26,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final AppUserRepository appUserRepository;
-    private final JwtAuthFilter jwtAuthFilter;
 
-    public SecurityConfig(AppUserRepository appUserRepository, JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(AppUserRepository appUserRepository) {
         this.appUserRepository = appUserRepository;
-        this.jwtAuthFilter = jwtAuthFilter;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
