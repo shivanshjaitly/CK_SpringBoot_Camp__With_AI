@@ -492,7 +492,9 @@ Try with employee token → **403 Forbidden**
 
 ### SAY — Week 6 preview
 
-> "**Project #2 done.** Next: **Booking Service + RAG** — AI that reads uploaded PDFs."
+> "**Project #2 done.** Next: **Project #3 — Booking Service** (Week 6–7).
+> Slots + bookings + idempotency + AOP, then microservices, Kafka saga, and Spring AI RAG semantic search.
+> Open [`docs/WEEK-6/README.md`](../WEEK-6/README.md)."
 
 ---
 

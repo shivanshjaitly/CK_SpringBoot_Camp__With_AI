@@ -17,6 +17,8 @@ release.properties
 # Secrets stay local:
 week-01-employee-management/.env
 week-02-employee-management/.env
+week-04-expense-approval/.env
+week-06-booking-service/.env
 
 # OS
 .DS_Store

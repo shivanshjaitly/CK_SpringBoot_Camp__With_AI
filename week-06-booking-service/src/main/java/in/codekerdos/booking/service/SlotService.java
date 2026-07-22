@@ -1,0 +1,65 @@
+package in.codekerdos.booking.service;
+
+import in.codekerdos.booking.dto.CreateSlotRequest;
+import in.codekerdos.booking.dto.SlotResponse;
+import in.codekerdos.booking.entity.AppUser;
+import in.codekerdos.booking.entity.Slot;
+import in.codekerdos.booking.enums.ResourceType;
+import in.codekerdos.booking.enums.SlotStatus;
+import in.codekerdos.booking.exception.BusinessException;
+import in.codekerdos.booking.exception.ResourceNotFoundException;
+import in.codekerdos.booking.repository.AppUserRepository;
+import in.codekerdos.booking.repository.SlotRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class SlotService {
+
+    private final SlotRepository slotRepository;
+    private final AppUserRepository userRepository;
+
+    public SlotService(SlotRepository slotRepository, AppUserRepository userRepository) {
+        this.slotRepository = slotRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public SlotResponse create(CreateSlotRequest request, String providerEmail) {
+        if (!request.endTime().isAfter(request.startTime())) {
+            throw new BusinessException("endTime must be after startTime");
+        }
+        AppUser provider = userRepository.findByEmail(providerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
+
+        Slot slot = new Slot();
+        slot.setTitle(request.title());
+        slot.setDescription(request.description());
+        slot.setResourceType(request.resourceType());
+        slot.setStartTime(request.startTime());
+        slot.setEndTime(request.endTime());
+        slot.setLocation(request.location());
+        slot.setCapacity(request.capacity());
+        slot.setBookedCount(0);
+        slot.setStatus(SlotStatus.OPEN);
+        slot.setProvider(provider);
+        return SlotResponse.from(slotRepository.save(slot));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SlotResponse> listOpen(ResourceType type) {
+        List<Slot> slots = type == null
+                ? slotRepository.findByStatus(SlotStatus.OPEN)
+                : slotRepository.findByResourceTypeAndStatus(type, SlotStatus.OPEN);
+        return slots.stream().map(SlotResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SlotResponse get(Long id) {
+        Slot slot = slotRepository.findByIdWithProvider(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Slot not found: " + id));
+        return SlotResponse.from(slot);
+    }
+}

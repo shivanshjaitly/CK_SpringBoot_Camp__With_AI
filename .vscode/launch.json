@@ -33,6 +33,30 @@
       "env": {
         "SPRING_PROFILES_ACTIVE": "mysql"
       }
+    },
+    {
+      "type": "java",
+      "name": "Week 6 Booking — Run (H2)",
+      "request": "launch",
+      "mainClass": "in.codekerdos.booking.BookingServiceApplication",
+      "projectName": "week-06-booking-service",
+      "cwd": "${workspaceFolder}/week-06-booking-service",
+      "envFile": "${workspaceFolder}/week-06-booking-service/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "h2"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Week 6 Booking — Run (Postgres)",
+      "request": "launch",
+      "mainClass": "in.codekerdos.booking.BookingServiceApplication",
+      "projectName": "week-06-booking-service",
+      "cwd": "${workspaceFolder}/week-06-booking-service",
+      "envFile": "${workspaceFolder}/week-06-booking-service/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "postgres"
+      }
     }
   ]
 }

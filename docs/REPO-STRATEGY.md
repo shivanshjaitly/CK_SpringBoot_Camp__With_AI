@@ -11,20 +11,14 @@
 codekerdos-springboot-ai-bootcamp/
 ├── README.md
 ├── docs/
-│   ├── WEEK-1/
-│   │   ├── README.md
-│   │   ├── Class-1.md
-│   │   └── Class-2.md
-│   ├── WEEK-2/
-│   │   ├── README.md
-│   │   ├── Class-1.md
-│   │   └── Class-2.md
-│   └── ... WEEK-3 through WEEK-7
+│   ├── WEEK-1/ … WEEK-5/          ← EMS + Expense
+│   ├── WEEK-6/                    ← Booking Class 1–2
+│   └── WEEK-7/                    ← Microservices + RAG
 ├── week-01-spring-core-demo/
 ├── week-01-employee-management/
 ├── week-02-employee-management/    ← Week 2–3 (EMS + security)
 ├── week-04-expense-approval/       ← Week 4–5 (Expense — Project #2)
-└── week-06-booking-service/
+└── week-06-booking-service/        ← Week 6–7 (Booking — Project #3)
 ```
 
 ### Why one repo?
