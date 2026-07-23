@@ -2,11 +2,13 @@ package in.codekerdos.booking.service;
 
 import in.codekerdos.booking.dto.BookingResponse;
 import in.codekerdos.booking.dto.CreateBookingRequest;
+import in.codekerdos.booking.dto.ProviderStatsResponse;
 import in.codekerdos.booking.entity.AppUser;
 import in.codekerdos.booking.entity.Booking;
 import in.codekerdos.booking.entity.Slot;
 import in.codekerdos.booking.enums.BookingStatus;
 import in.codekerdos.booking.enums.SlotStatus;
+import in.codekerdos.booking.event.OutboxEventRecorder;
 import in.codekerdos.booking.exception.BusinessException;
 import in.codekerdos.booking.exception.ResourceNotFoundException;
 import in.codekerdos.booking.repository.AppUserRepository;
@@ -24,15 +26,18 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final SlotRepository slotRepository;
     private final AppUserRepository userRepository;
+    private final OutboxEventRecorder outboxEventRecorder;
 
     public BookingService(
             BookingRepository bookingRepository,
             SlotRepository slotRepository,
-            AppUserRepository userRepository
+            AppUserRepository userRepository,
+            OutboxEventRecorder outboxEventRecorder
     ) {
         this.bookingRepository = bookingRepository;
         this.slotRepository = slotRepository;
         this.userRepository = userRepository;
+        this.outboxEventRecorder = outboxEventRecorder;
     }
 
     /**
@@ -76,6 +81,10 @@ public class BookingService {
             slot.setStatus(SlotStatus.FULL);
         }
 
+        // Same transaction as the Booking/Slot write — the outbox row and the state
+        // change commit together or not at all (transactional outbox pattern).
+        outboxEventRecorder.recordConfirmed(booking.getId(), slot.getId(), customer.getEmail());
+
         return BookingResponse.from(booking);
     }
 
@@ -114,6 +123,17 @@ public class BookingService {
             slot.setStatus(SlotStatus.OPEN);
         }
 
+        // Compensating event for the choreography saga — notification-service
+        // reacts by sending a cancellation notice (no orchestrator class).
+        outboxEventRecorder.recordCancelled(booking.getId(), slot.getId(), booking.getCustomer().getEmail());
+
         return BookingResponse.from(booking);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProviderStatsResponse> providerBookingStats() {
+        return bookingRepository.findProviderBookingStats().stream()
+                .map(ProviderStatsResponse::from)
+                .toList();
     }
 }

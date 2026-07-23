@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>My Bookings — CodeKerdos Booking</title>
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<p th:if="${message}" class="banner ok" th:text="${message}"></p>
+<p th:if="${error}" class="banner err" th:text="${error}"></p>
+
+<h2>My Bookings</h2>
+
+<div class="card" th:each="booking : ${bookings}">
+  <h3 th:text="${booking.slotTitle}">Slot title</h3>
+  <p class="meta" th:text="${#temporals.format(booking.createdAt, 'dd MMM yyyy, HH:mm')}">created at</p>
+  <p th:if="${booking.notes}" th:text="${booking.notes}">notes</p>
+  <p>
+    <span class="badge" th:classappend="${booking.status}" th:text="${booking.status}">CONFIRMED</span>
+  </p>
+  <form th:action="@{'/ui/bookings/' + ${booking.id} + '/cancel'}" method="post"
+        th:if="${booking.status.name() == 'CONFIRMED'}">
+    <button type="submit" class="danger">Cancel booking</button>
+  </form>
+</div>
+<p th:if="${#lists.isEmpty(bookings)}">You haven't booked anything yet.</p>
+
+<h2>Notifications (from notification-service, via Kafka)</h2>
+<div class="card" th:each="n : ${notifications}">
+  <span class="badge" th:classappend="${n.eventType}" th:text="${n.eventType}">BookingConfirmed</span>
+  <p th:text="${n.message}">message</p>
+  <!-- n.sentAt is a plain Instant (no zone) — #temporals.format needs calendar
+       fields a bare Instant can't supply, so print it as-is rather than risk
+       an UnsupportedTemporalTypeException at render time. -->
+  <p class="meta" th:text="${n.sentAt}">sent at</p>
+</div>
+<p th:if="${#lists.isEmpty(notifications)}">
+  No notifications yet — either nothing's happened, or notification-service isn't running
+  (start it with <code>docker compose up -d</code> from week-06-booking-service).
+</p>
+</body>
+</html>

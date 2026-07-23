@@ -57,6 +57,14 @@
       "env": {
         "SPRING_PROFILES_ACTIVE": "postgres"
       }
+    },
+    {
+      "type": "java",
+      "name": "Week 7 Notification Service — Run",
+      "request": "launch",
+      "mainClass": "in.codekerdos.notification.NotificationServiceApplication",
+      "projectName": "week-07-notification-service",
+      "cwd": "${workspaceFolder}/week-07-notification-service"
     }
   ]
 }

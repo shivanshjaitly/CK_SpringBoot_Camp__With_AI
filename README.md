@@ -63,11 +63,28 @@ Week index: [`docs/WEEK-5/README.md`](docs/WEEK-5/README.md)
 
 ---
 
+## Week 6–7 — Booking Platform (Project #3, flagship)
+
+| Class | Day | Teaching script | Code folder |
+|-------|-----|-----------------|-------------|
+| **Week 6, Class 1** | Saturday | [`docs/WEEK-6/Class-1.md`](docs/WEEK-6/Class-1.md) | `week-06-booking-service` |
+| **Week 6, Class 2** | Sunday | [`docs/WEEK-6/Class-2.md`](docs/WEEK-6/Class-2.md) | `week-06-booking-service` |
+| **Week 7, Class 1** | Saturday | [`docs/WEEK-7/Class-1.md`](docs/WEEK-7/Class-1.md) | `week-06-booking-service` + `week-07-notification-service` |
+| **Week 7, Class 2** | Sunday | [`docs/WEEK-7/Class-2.md`](docs/WEEK-7/Class-2.md) | `week-06-booking-service` (AI search — not yet implemented) |
+
+Idempotency · state machine · AOP audit · N+1/`@EntityGraph` · native SQL reporting query · transactional outbox → Kafka → second microservice (`notification-service`) · choreography saga with cancel compensation. Two independently deployable Spring Boot services running via one `docker compose up --build`.
+
+Week index: [`docs/WEEK-6/README.md`](docs/WEEK-6/README.md) · [`docs/WEEK-7/README.md`](docs/WEEK-7/README.md)
+
+---
+
 ## Run code
 
 **Week 1–3:** See [`START-HERE.md`](START-HERE.md)
 
 **Week 4–5:** [`docs/WEEK-4/Class-1.md`](docs/WEEK-4/Class-1.md) — `week-04-expense-approval`
+
+**Week 6–7:** [`week-06-booking-service/README.md`](week-06-booking-service/README.md) — `week-06-booking-service` + `week-07-notification-service`
 
 ---
 

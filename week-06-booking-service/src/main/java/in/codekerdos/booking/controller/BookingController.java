@@ -2,6 +2,7 @@ package in.codekerdos.booking.controller;
 
 import in.codekerdos.booking.dto.BookingResponse;
 import in.codekerdos.booking.dto.CreateBookingRequest;
+import in.codekerdos.booking.dto.ProviderStatsResponse;
 import in.codekerdos.booking.service.BookingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -56,5 +57,12 @@ public class BookingController {
     @Operation(summary = "Cancel my booking")
     public ResponseEntity<BookingResponse> cancel(@PathVariable Long id, Authentication authentication) {
         return ResponseEntity.ok(bookingService.cancel(id, authentication.getName()));
+    }
+
+    @GetMapping("/stats/providers")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Bookings per provider (native SQL aggregate — ADMIN)")
+    public ResponseEntity<List<ProviderStatsResponse>> providerStats() {
+        return ResponseEntity.ok(bookingService.providerBookingStats());
     }
 }

@@ -4,6 +4,7 @@ import in.codekerdos.booking.repository.AppUserRepository;
 import in.codekerdos.booking.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -31,8 +32,44 @@ public class SecurityConfig {
         this.appUserRepository = appUserRepository;
     }
 
+    /**
+     * Session-based form login for the server-rendered Thymeleaf UI at /ui/**.
+     * Deliberately a SEPARATE chain from the API below: the UI needs cookies +
+     * CSRF, the JSON API needs neither and stays stateless for Postman/curl/etc.
+     * Evaluated first (Order 1) because its matcher is the narrower one.
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
+    @Order(1)
+    public SecurityFilterChain uiSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/ui/**")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/ui/login", "/webjars/**", "/css/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/ui/login")
+                        .loginProcessingUrl("/ui/login")
+                        .defaultSuccessUrl("/ui/dashboard", true)
+                        .failureUrl("/ui/login?error")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/ui/logout")
+                        .logoutSuccessUrl("/ui/login?logout")
+                )
+                .authenticationProvider(authenticationProvider());
+
+        return http.build();
+    }
+
+    /**
+     * Stateless JWT API — unchanged behavior, just narrowed to /** so it's the
+     * fallback chain for everything the UI chain above doesn't claim.
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth

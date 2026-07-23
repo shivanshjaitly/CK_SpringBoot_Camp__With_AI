@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <title>Open Slots — CodeKerdos Booking</title>
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<p th:if="${message}" class="banner ok" th:text="${message}"></p>
+<p th:if="${error}" class="banner err" th:text="${error}"></p>
+
+<h2>Open Slots</h2>
+
+<div class="card" th:each="slot : ${slots}">
+  <h3 th:text="${slot.title}">Slot title</h3>
+  <p class="meta" th:text="${slot.resourceType} + ' · ' + ${slot.location}">type · location</p>
+  <p class="meta" th:text="${#temporals.format(slot.startTime, 'dd MMM yyyy, HH:mm')} + ' – ' + ${#temporals.format(slot.endTime, 'HH:mm')}">time</p>
+  <p th:text="${slot.description}">description</p>
+  <p class="meta">
+    <span class="badge" th:classappend="${slot.status}" th:text="${slot.status}">OPEN</span>
+    &middot; <span th:text="${slot.bookedCount} + ' / ' + ${slot.capacity} + ' booked'">0 / 1 booked</span>
+    &middot; provider: <span th:text="${slot.providerEmail}"></span>
+  </p>
+
+  <form th:action="@{/ui/bookings}" method="post" sec:authorize="hasRole('CUSTOMER')" th:if="${slot.status.name() == 'OPEN'}">
+    <input type="hidden" name="slotId" th:value="${slot.id}">
+    <input type="hidden" name="idempotencyKey" th:value="${T(java.util.UUID).randomUUID().toString()}">
+    <textarea name="notes" placeholder="Notes (optional)" rows="2"></textarea>
+    <button type="submit">Book this slot</button>
+  </form>
+</div>
+
+<p th:if="${#lists.isEmpty(slots)}">No open slots right now.</p>
+</body>
+</html>

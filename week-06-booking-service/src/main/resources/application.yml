@@ -6,11 +6,24 @@ spring:
     name: booking-service
   profiles:
     active: h2
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # No producer FQCN in the message headers — notification-service deserializes
+        # into its OWN local BookingEvent class, not ours. Services share a JSON
+        # contract, not a Java type.
+        spring.json.add.type.headers: false
+        acks: all
 
 app:
   jwt:
     secret: ${JWT_SECRET:codekerdos-demo-secret-change-in-prod-min-32-chars}
     expiration-ms: 86400000
+  notification-service:
+    base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://localhost:8082}
 
 management:
   endpoints:

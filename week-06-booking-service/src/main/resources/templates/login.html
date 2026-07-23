@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Login — CodeKerdos Booking</title>
+  <th:block th:replace="~{fragments/layout :: head}"></th:block>
+</head>
+<body>
+<div class="card" style="max-width: 380px; margin: 4rem auto;">
+  <h3>CodeKerdos Booking</h3>
+  <p th:if="${param.error}" class="banner err">Invalid email or password.</p>
+  <p th:if="${param.logout}" class="banner ok">Logged out.</p>
+
+  <form th:action="@{/ui/login}" method="post">
+    <label>Email</label>
+    <input type="email" name="username" required autofocus>
+    <label>Password</label>
+    <input type="password" name="password" required>
+    <button type="submit">Log in</button>
+  </form>
+
+  <p class="meta" style="margin-top:1rem;">
+    Seeded users: customer@codekerdos.in / cust123 &middot; provider@codekerdos.in / prov123
+  </p>
+</div>
+</body>
+</html>
