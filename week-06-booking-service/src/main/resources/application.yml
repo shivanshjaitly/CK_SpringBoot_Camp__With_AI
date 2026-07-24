@@ -17,6 +17,19 @@ spring:
         # contract, not a Java type.
         spring.json.add.type.headers: false
         acks: all
+  ai:
+    openai:
+      api-key: ${GROQ_API_KEY:}
+      base-url: https://api.groq.com/openai
+      chat:
+        options:
+          model: llama-3.3-70b-versatile
+      # Groq's OpenAI-compatible endpoint has no embeddings API — embeddings
+      # come from the local ONNX model instead (see AiConfig). This just
+      # stops Spring AI from also auto-configuring an OpenAI EmbeddingModel
+      # bean, which would collide with the one AiConfig defines.
+      embedding:
+        enabled: false
 
 app:
   jwt:

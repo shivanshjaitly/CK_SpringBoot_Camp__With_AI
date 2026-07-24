@@ -10,6 +10,7 @@ import in.codekerdos.booking.exception.BusinessException;
 import in.codekerdos.booking.exception.ResourceNotFoundException;
 import in.codekerdos.booking.repository.AppUserRepository;
 import in.codekerdos.booking.repository.SlotRepository;
+import in.codekerdos.booking.service.ai.AiSlotIndexService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +21,13 @@ public class SlotService {
 
     private final SlotRepository slotRepository;
     private final AppUserRepository userRepository;
+    private final AiSlotIndexService aiSlotIndexService;
 
-    public SlotService(SlotRepository slotRepository, AppUserRepository userRepository) {
+    public SlotService(SlotRepository slotRepository, AppUserRepository userRepository,
+                        AiSlotIndexService aiSlotIndexService) {
         this.slotRepository = slotRepository;
         this.userRepository = userRepository;
+        this.aiSlotIndexService = aiSlotIndexService;
     }
 
     @Transactional
@@ -45,7 +49,11 @@ public class SlotService {
         slot.setBookedCount(0);
         slot.setStatus(SlotStatus.OPEN);
         slot.setProvider(provider);
-        return SlotResponse.from(slotRepository.save(slot));
+        Slot saved = slotRepository.save(slot);
+        // Makes the slot semantically searchable immediately — not just after the
+        // next full reindex on a future restart.
+        aiSlotIndexService.indexSlot(saved);
+        return SlotResponse.from(saved);
     }
 
     @Transactional(readOnly = true)

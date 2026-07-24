@@ -50,6 +50,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/booking_db
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: ${JWT_SECRET:-codekerdos-demo-secret-change-in-prod-min-32-chars}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

@@ -8,7 +8,7 @@ Two independently deployable Spring Boot services: **`booking-service`** (this f
 
 ```bash
 cp .env.example .env
-# set JWT_SECRET
+# set JWT_SECRET (and GROQ_API_KEY if you want /api/ai/ask to actually answer — see RUNBOOK.md)
 
 ./mvnw spring-boot:run
 # or F5 → "Week 6 Booking — Run (H2)"
@@ -76,7 +76,9 @@ docker compose up -d postgres
 | Choreography saga with cancel compensation | ✅ |
 | Idempotent consumer (dedupe by eventId) | ✅ |
 | Docker Compose: Postgres + Kafka + both services, one command | ✅ |
-| `ai-search-service` — embeddings / RAG (Week 7 Sunday) | ❌ not built yet |
+| Thymeleaf server-rendered UI (`/ui/**`, session-based, separate from the JWT API) | ✅ |
+| Semantic slot search — local ONNX embeddings + `SimpleVectorStore` (`GET /api/ai/search`) | ✅ |
+| RAG — retrieval + Groq-answered questions over live slot data (`POST /api/ai/ask`) | ✅ |
 
 ## Roadmap
 
@@ -85,4 +87,16 @@ docker compose up -d postgres
 | 6 Sat | Domain + JWT + REST + OpenAPI |
 | 6 Sun | Idempotency · AOP · N+1 · tests · Docker |
 | 7 Sat | notification-service · Kafka · saga |
-| 7 Sun | ai-search-service · embeddings · RAG |
+| 7 Sun | embeddings · SimpleVectorStore · RAG ask |
+
+## AI search / RAG (Week 7 Sunday)
+
+```
+User query → EmbeddingModel (local ONNX, all-MiniLM-L6-v2) → SimpleVectorStore similarity search
+           → top-K live slots re-fetched from DB → ChatClient (Groq) → answer
+```
+
+- `GET /api/ai/search?query=...` — semantic search, ranks by meaning (works with **no** `GROQ_API_KEY`; embeddings are fully local).
+- `POST /api/ai/ask` — retrieval-augmented answer over the current slot catalog (needs `GROQ_API_KEY`).
+- Embeddings run in-process via `spring-ai-transformers` + a bundled native PyTorch runtime (`ai.djl.pytorch:pytorch-native-cpu`, resolved once at Maven build time, not downloaded at app startup — see `pom.xml`'s OS-detection profiles). Chat completion goes through Groq's OpenAI-compatible endpoint, same as weeks 1 and 4 — embeddings and chat deliberately come from two different providers since Groq has no embeddings API of its own.
+- New slots become searchable immediately (`SlotService.create` indexes on save); all existing slots are indexed once at startup.

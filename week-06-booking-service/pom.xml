@@ -21,7 +21,20 @@
         <java.version>17</java.version>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.7.0</springdoc.version>
+        <spring-ai.version>1.0.0-M5</spring-ai.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -51,6 +64,29 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+        </dependency>
+        <!-- Local ONNX embedding model (all-MiniLM-L6-v2) — runs in-process, no API
+             key or network call. Groq's OpenAI-compatible endpoint (used above for
+             chat) has no embeddings API, so embeddings and chat deliberately come
+             from two different providers here. -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-transformers</artifactId>
+        </dependency>
+        <!-- Bundles the native PyTorch runtime (DJL's ONNX backend needs it) as a
+             build-time Maven dependency instead of letting DJL fetch it over HTTP
+             at application startup. Runtime auto-download is fragile behind
+             corporate/campus proxies — build-time resolution goes through the
+             same Maven Central path everything else in this pom already uses. -->
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-native-cpu</artifactId>
+            <version>2.4.0</version>
+            <classifier>${djl.native.classifier}</classifier>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -117,4 +153,37 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
+
+    <!-- Picks the right pytorch-native-cpu classifier for whichever machine
+         runs the build — Mac (Intel or Apple Silicon), Linux, or Windows. -->
+    <profiles>
+        <profile>
+            <id>djl-osx-aarch64</id>
+            <activation><os><family>mac</family><arch>aarch64</arch></os></activation>
+            <properties><djl.native.classifier>osx-aarch64</djl.native.classifier></properties>
+        </profile>
+        <profile>
+            <id>djl-osx-x86_64</id>
+            <activation><os><family>mac</family><arch>x86_64</arch></os></activation>
+            <properties><djl.native.classifier>osx-x86_64</djl.native.classifier></properties>
+        </profile>
+        <profile>
+            <id>djl-linux-x86_64</id>
+            <activation><os><family>unix</family><name>linux</name></os></activation>
+            <properties><djl.native.classifier>linux-x86_64</djl.native.classifier></properties>
+        </profile>
+        <profile>
+            <id>djl-windows-x86_64</id>
+            <activation><os><family>windows</family></os></activation>
+            <properties><djl.native.classifier>win-x86_64</djl.native.classifier></properties>
+        </profile>
+    </profiles>
 </project>
