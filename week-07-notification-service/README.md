@@ -15,6 +15,12 @@ cd ../week-07-notification-service && ./mvnw spring-boot:run
 - Health: http://localhost:8082/actuator/health
 - `GET /api/notifications` — the 50 most recent simulated notifications (H2 in-memory)
 
+## Why `localhost:29092` and not `9092`
+
+The Kafka broker in `../week-06-booking-service/docker-compose.yml` advertises **two listeners**: `PLAINTEXT://kafka:9092` for other containers on the compose network, and `PLAINTEXT_HOST://localhost:29092` for anything running on the host machine (this service when run via `./mvnw spring-boot:run`, IDE runs, CLI tools). Without the second listener, the broker would tell a host-side client to reconnect to `kafka:9092`, which doesn't resolve outside Docker. When this service runs *inside* Docker Compose instead (see the root `docker-compose.yml`), it's given `KAFKA_BOOTSTRAP_SERVERS=kafka:9092` to use the container-network listener.
+
+The broker also has a `healthcheck` (`kafka-broker-api-versions.sh`) with a 20s `start_period`, so `docker compose up -d kafka` can report the container as "started" before the broker is actually ready to accept connections — if this service fails to connect on first try, wait a few seconds and retry, or use `docker compose up -d --wait kafka` to block until healthy.
+
 ## What it does
 
 1. `@KafkaListener` on `booking.events`, consumer group `notification-service`.

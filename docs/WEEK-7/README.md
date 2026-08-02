@@ -7,6 +7,8 @@
 
 **Project #3 completes this week.**
 
+**Deep dive:** [Docker.md](Docker.md) — Dockerfile, Compose, listeners, healthchecks, explained line by line.
+
 | Week | Classes | Covers |
 |------|---------|--------|
 | Week 6 | Sat + Sun | Monolith booking API hardened |
